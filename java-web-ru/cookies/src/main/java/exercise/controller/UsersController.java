@@ -22,16 +22,16 @@ public class UsersController {
     // BEGIN
     public static void signIn(Context ctx) {
         var token = Security.generateToken();
-        var firstName = ctx.queryParam("firstName");
-        var lastName = ctx.queryParam("lastName");
-        var password = ctx.queryParam("password");
-        var email = ctx.queryParam("email");
+        var firstName = ctx.formParam("firstName");
+        var lastName = ctx.formParam("lastName");
+        var password = ctx.formParam("password");
+        var email = ctx.formParam("email");
 
         var user = new User(firstName, lastName, email, password, token);
         UserRepository.save(user);
 
         var id = user.getId();
-        ctx.cookie("token", token);
+        ctx.cookie("token", user.getToken());
         ctx.redirect("/users/" + id);
     }
 
@@ -40,7 +40,7 @@ public class UsersController {
         var id = ctx.pathParamAsClass("id", Long.class).get();
         var user = UserRepository.find(id).orElseThrow(() -> new NotFoundResponse("User nod found"));
         var userToken = user.getToken();
-        if (token.equals(userToken)) {
+        if (Objects.requireNonNull(token).equals(userToken)) {
             var page = new UserPage(user);
             ctx.render("users/show.jte", model("page", page));
         } else {
